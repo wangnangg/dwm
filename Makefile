@@ -27,6 +27,8 @@ dwm: ${OBJ}
 
 clean:
 	rm -f dwm ${OBJ} dwm-${VERSION}.tar.gz
+	rm *.pkg.tar.xz -f
+	rm -rf src pkg
 
 dist: clean
 	mkdir -p dwm-${VERSION}
