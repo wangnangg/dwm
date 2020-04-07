@@ -45,10 +45,13 @@ static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] 
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 
+#include "grid.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
 	{ "[M]",      monocle },
+	{ "HHH",      grid },
+	{ NULL,       NULL },
 };
 
 /* key definitions */
@@ -92,6 +95,8 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 	{ MODKEY,                       XK_n,      nametag,        {0} },
+	{ MODKEY|ControlMask,			XK_comma,  cyclelayout,    {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
