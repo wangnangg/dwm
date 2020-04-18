@@ -11,17 +11,30 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "monospace:size=10" };
 static const char dmenufont[]       = "monospace:size=10";
-static const char col_gray1[]       = "#222222";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
-static const char pink[]			= "#f06292";
-static const char red[]				= "#c62828";
+
+static const char black[] =  "#3b4252"; /* black   */
+static const char red[] =  "#bf616a"; /* red     */
+static const char green[] =  "#a3be8c"; /* green   */
+static const char yellow[] = "#ebcb8b"; /* yellow  */
+static const char blue[] = "#81a1c1"; /* blue    */
+static const char magenta[] = "#b48ead"; /* magenta */
+static const char cyan[] = "#88c0d0"; /* cyan    */
+static const char white[] = "#e5e9f0"; /* white   */
+  /* 8 bright colors */
+static const char br_black[] = "#4c566a"; /* black   */
+static const char br_red[] = "#bf616a"; /* red     */
+static const char br_green[] = "#a3be8c"; /* green   */
+static const char br_yellow[] = "#ebcb8b"; /* yellow  */
+static const char br_blue[] = "#81a1c1"; /* blue    */
+static const char br_magenta[] = "#b48ead"; /* magenta */
+static const char br_cyan[] = "#8fbcbb"; /* cyan    */
+static const char br_white[] = "#eceff4"; /* white   */
+
+
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, red,  	   red  },
+	[SchemeNorm] = { white, black, white},
+	[SchemeSel]  = { white, red, red},
 };
 
 /* tagging */
