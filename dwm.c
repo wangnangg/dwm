@@ -54,7 +54,7 @@
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
-#define TAGMASK                 ((1 << LENGTH(tags)) - 1)
+#define TAGMASK                 ((1 << NUM_TAGS) - 1)
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 #define SYSTEM_TRAY_REQUEST_DOCK    0
@@ -313,15 +313,16 @@ static Window root, wmcheckwin;
 
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
-	int nmasters[LENGTH(tags) + 1]; /* number of windows in master area */
-	float mfacts[LENGTH(tags) + 1]; /* mfacts per tag */
-	unsigned int sellts[LENGTH(tags) + 1]; /* selected layouts */
-	const Layout *ltidxs[LENGTH(tags) + 1][2]; /* matrix of tags and layouts indexes  */
-	int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
+	int nmasters[NUM_TAGS + 1]; /* number of windows in master area */
+	float mfacts[NUM_TAGS + 1]; /* mfacts per tag */
+	char tagnames[NUM_TAGS][MAX_TAGLEN];
+	unsigned int sellts[NUM_TAGS + 1]; /* selected layouts */
+	const Layout *ltidxs[NUM_TAGS + 1][2]; /* matrix of tags and layouts indexes  */
+	int showbars[NUM_TAGS + 1]; /* display bar for the current tag */
 };
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
-struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+struct NumTags { char limitexceeded[NUM_TAGS > 31 ? -1 : 1]; };
 
 /* function implementations */
 void
@@ -495,9 +496,9 @@ buttonpress(XEvent *e)
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
 		do
-			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
+			x += TEXTW(selmon->pertag->tagnames[i]);
+		while (ev->x >= x && ++i < NUM_TAGS);
+		if (i < NUM_TAGS) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
@@ -761,7 +762,7 @@ createmon(void)
 	m->pertag = ecalloc(1, sizeof(Pertag));
 	m->pertag->curtag = m->pertag->prevtag = 1;
 
-	for (i = 0; i <= LENGTH(tags); i++) {
+	for (i = 0; i <= NUM_TAGS; i++) {
 		m->pertag->nmasters[i] = m->nmaster;
 		m->pertag->mfacts[i] = m->mfact;
 
@@ -770,6 +771,10 @@ createmon(void)
 		m->pertag->sellts[i] = m->sellt;
 
 		m->pertag->showbars[i] = m->showbar;
+
+		if(i < NUM_TAGS) {
+			snprintf(m->pertag->tagnames[i], MAX_TAGLEN, "%d", i+1);
+		}
 	}
 
 	return m;
@@ -873,10 +878,10 @@ drawbar(Monitor *m)
 			urg |= c->tags;
 	}
 	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
+	for (i = 0; i < NUM_TAGS; i++) {
+		w = TEXTW(m->pertag->tagnames[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, m->pertag->tagnames[i], urg & 1 << i);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
@@ -1418,10 +1423,10 @@ nametag(const Arg *arg) {
 	if((p = strchr(name, '\n')))
 		*p = '\0';
 
-	for(i = 0; i < LENGTH(tags); i++)
+	for(i = 0; i < NUM_TAGS; i++)
 		if(selmon->tagset[selmon->seltags] & (1 << i)) {
-			sprintf(tags[i], TAG_PREPEND, i+1);
-			strcat(tags[i], name);
+			sprintf(selmon->pertag->tagnames[i], TAG_PREPEND, i+1);
+			strcat(selmon->pertag->tagnames[i], name);
 		}
 	drawbars();
 }
