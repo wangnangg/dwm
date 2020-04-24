@@ -1,6 +1,6 @@
 dwm
 
-base dwm-6.2
+based on dwm-6.2
 
 added features:
 1. install script for pacman
@@ -13,7 +13,8 @@ added features:
 8. removed float layout
 9. master/slave ratio changed to 1:1
 10. fancybar: all window names in the active tag are displayed in the middle section of bar
-11. grid layout; ctrl + moduse
+11. grid layout
+12. keybindings to cycle layout
 12. moved keybindings to sxhkd when possible
 13. use nord color theme
 14. pertag: each tag has its own layout
