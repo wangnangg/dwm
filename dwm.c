@@ -779,7 +779,7 @@ createmon(void)
 		m->pertag->showbars[i] = m->showbar;
 
 		if(i < NUM_TAGS) {
-			snprintf(m->pertag->tagnames[i], MAX_TAGLEN, "%d:", i+1);
+			snprintf(m->pertag->tagnames[i], MAX_TAGLEN, TAG_PREPEND, tag_prefix[i]);
 		}
 	}
 
@@ -1449,8 +1449,12 @@ nametag(const Arg *arg) {
 
 	for(i = 0; i < NUM_TAGS; i++)
 		if(selmon->tagset[selmon->seltags] & (1 << i)) {
-			sprintf(selmon->pertag->tagnames[i], TAG_PREPEND, i+1);
-			strcat(selmon->pertag->tagnames[i], name);
+			sprintf(selmon->pertag->tagnames[i], TAG_PREPEND, tag_prefix[i]);
+			if(strlen(name) > 0) {
+				strcat(selmon->pertag->tagnames[i], ":");
+				strcat(selmon->pertag->tagnames[i], name);
+			}
+
 		}
 	drawbars();
 }
