@@ -129,3 +129,9 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
 
+static WindowNameMap window_name_map[] = {
+	{"code - insiders", ""},
+	{"st-256color", ""},
+	{"google-chrome", ""}
+};
+

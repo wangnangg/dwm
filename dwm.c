@@ -20,6 +20,7 @@
  *
  * To understand everything else, start reading main().
  */
+#define _GNU_SOURCE
 #include <errno.h>
 #include <locale.h>
 #include <signal.h>
@@ -166,6 +167,11 @@ struct Systray {
 	Window win;
 	Client *icons;
 };
+
+typedef struct {
+	char class_keyword[36];
+	char display_name[12];
+} WindowNameMap;
 
 /* function declarations */
 static void applyrules(Client *c);
@@ -850,6 +856,23 @@ dirtomon(int dir)
 	return m;
 }
 
+const char* get_client_display_name(Client* c) {
+	const char* class;
+	XClassHint ch = { NULL, NULL };
+
+
+	XGetClassHint(dpy, c->win, &ch);
+	class    = ch.res_class ? ch.res_class : broken;
+
+	for(int i = 0; i < LENGTH(window_name_map); i++) {
+		if(strcasestr(class, window_name_map[i].class_keyword)) {
+			return window_name_map[i].display_name;
+		}
+	}
+
+	return c->name;
+}
+
 void
 drawbar(Monitor *m)
 {
@@ -858,6 +881,7 @@ drawbar(Monitor *m)
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0, n = 0;
 	Client *c;
+
 
 	if(showsystray && m == systraytomon(m))
 		stw = getsystraywidth();
@@ -894,13 +918,13 @@ drawbar(Monitor *m)
 
 	if ((w = m->ww - sw - stw - x) > bh) {
 		if (n > 0) {
-			tw = TEXTW(m->sel->name) + lrpad;
+			tw = TEXTW(get_client_display_name(m->sel)) + lrpad;
 			mw = (tw >= w || n == 1) ? 0 : (w - tw) / (n - 1);
 			i = 0;
 			for (c = m->clients; c; c = c->next) {
 				if (!ISVISIBLE(c) || c == m->sel)
 					continue;
-				tw = TEXTW(c->name);
+				tw = TEXTW(get_client_display_name(c));
 				if(tw < mw)
 					ew += (mw - tw);
 				else
@@ -911,10 +935,10 @@ drawbar(Monitor *m)
 			for (c = m->clients; c; c = c->next) {
 				if (!ISVISIBLE(c))
 					continue;
-				tw = MIN(m->sel == c ? w : mw, TEXTW(c->name));
+				tw = MIN(m->sel == c ? w : mw, TEXTW(get_client_display_name(c)));
 				drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
 				if (tw > 0) /* trap special handling of 0 in drw_text */
-					drw_text(drw, x, 0, tw, bh, lrpad / 2, c->name, 0);
+					drw_text(drw, x, 0, tw, bh, lrpad / 2, get_client_display_name(c), 0);
 				if (c->isfloating)
 					drw_rect(drw, x + boxs, boxs, boxw, boxw, c->isfixed, 0);
 				x += tw;
