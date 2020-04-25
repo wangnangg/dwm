@@ -773,7 +773,7 @@ createmon(void)
 		m->pertag->showbars[i] = m->showbar;
 
 		if(i < NUM_TAGS) {
-			snprintf(m->pertag->tagnames[i], MAX_TAGLEN, "%d", i+1);
+			snprintf(m->pertag->tagnames[i], MAX_TAGLEN, "%d:", i+1);
 		}
 	}
 
