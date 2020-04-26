@@ -131,7 +131,8 @@ static Button buttons[] = {
 static WindowNameMap window_name_map[] = {
 	{"code - insiders", ""},
 	{"st-256color", ""},
-	{"google-chrome", ""}
+	{"google-chrome", ""},
+	{"slack", "聆"}
 };
 
 /* tagging */
