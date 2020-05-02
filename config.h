@@ -132,7 +132,8 @@ static WindowNameMap window_name_map[] = {
 	{"code - insiders", ""},
 	{"st-256color", ""},
 	{"google-chrome", ""},
-	{"slack", "聆"}
+	{"slack", "聆"},
+	{"wps", ""}
 };
 
 /* tagging */
