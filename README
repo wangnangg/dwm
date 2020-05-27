@@ -21,3 +21,5 @@ added features:
 15. each monitor has its own set of tag names
 16. map window name to font awesome icon
 17. gaps (default to 0)
+18. move stacks
+19. hide windows

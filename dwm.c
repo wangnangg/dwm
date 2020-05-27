@@ -50,7 +50,7 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define TAG_ACTIVE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw + gappx)
@@ -76,7 +76,7 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeInactive }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -277,6 +277,8 @@ static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
 static void nametag(const Arg *arg);
+static Bool ISVISIBLE(Client* C);
+static void more_hidden_window(const Arg *arg);
 
 /* variables */
 static Systray *systray =  NULL;
@@ -325,10 +327,61 @@ struct Pertag {
 	unsigned int sellts[NUM_TAGS + 1]; /* selected layouts */
 	const Layout *ltidxs[NUM_TAGS + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[NUM_TAGS + 1]; /* display bar for the current tag */
+	unsigned int num_hidden_windows[NUM_TAGS + 1];
 };
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[NUM_TAGS > 31 ? -1 : 1]; };
+
+
+static int client_order_in_active_tag(Client* target_client) {
+	if(!TAG_ACTIVE(target_client)) {
+		die("client's tags are not active");
+		return -1;
+	}
+	int n = 0;
+	for (Client* c = target_client->mon->clients; c; c = c->next) {
+		if(c == target_client) {
+			return n;
+		}
+		if (TAG_ACTIVE(c)) {
+			n++;
+		}
+	}
+	die("cannot find client in client's monitor");
+	return -1;
+}
+
+static int count_clients_with_active_tag(Monitor* m) {
+	int n = 0;
+	for (Client* c = m->clients; c; c = c->next) {
+		if (TAG_ACTIVE(c)) {
+			n++;
+		}
+	}
+	return n;
+}
+
+static Bool ISVISIBLE(Client* C) {
+	if(!TAG_ACTIVE(C)) {
+		return False;
+	}
+	int order = client_order_in_active_tag(C);
+	int count = count_clients_with_active_tag(C->mon);
+	int hidden_count = C->mon->pertag->num_hidden_windows[C->mon->pertag->curtag];
+	return order + hidden_count < count;
+}
+
+static void more_hidden_window(const Arg *arg)
+{
+	int hidden_count = selmon->pertag->num_hidden_windows[selmon->pertag->curtag];
+	hidden_count += arg->i;
+	if(hidden_count < 0) {
+		hidden_count = 0;
+	}
+	selmon->pertag->num_hidden_windows[selmon->pertag->curtag] = hidden_count;
+	arrange(selmon);
+}
 
 /* function implementations */
 void
@@ -895,7 +948,7 @@ drawbar(Monitor *m)
 
 	resizebarwin(m);
 	for (c = m->clients; c; c = c->next) {
-		if (ISVISIBLE(c))
+		if (TAG_ACTIVE(c))
 			n++;
 		occ |= c->tags;
 		if (c->isurgent)
@@ -922,7 +975,7 @@ drawbar(Monitor *m)
 			mw = (tw >= w || n == 1) ? 0 : (w - tw) / (n - 1);
 			i = 0;
 			for (c = m->clients; c; c = c->next) {
-				if (!ISVISIBLE(c) || c == m->sel)
+				if (!TAG_ACTIVE(c) || c == m->sel)
 					continue;
 				tw = TEXTW(get_client_display_name(c));
 				if(tw < mw)
@@ -932,11 +985,20 @@ drawbar(Monitor *m)
 			}
 			if (i > 0)
 				mw += ew / i;
+			Bool first_hidden_found = False;
+			int norm_theme = SchemeNorm;
+			int sel_theme = SchemeSel;
 			for (c = m->clients; c; c = c->next) {
-				if (!ISVISIBLE(c))
+				if (!TAG_ACTIVE(c))
 					continue;
+				if(!first_hidden_found && !ISVISIBLE(c)) {
+					norm_theme = SchemeInactive;
+					sel_theme = SchemeInactive;
+					drw_setscheme(drw, scheme[norm_theme]);
+					first_hidden_found = True;
+				}
 				tw = MIN(m->sel == c ? w : mw, TEXTW(get_client_display_name(c)));
-				drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
+				drw_setscheme(drw, scheme[m->sel == c ? sel_theme : norm_theme]);
 				if (tw > 0) /* trap special handling of 0 in drw_text */
 					drw_text(drw, x, 0, tw, bh, lrpad / 2, get_client_display_name(c), 0);
 				if (c->isfloating)
@@ -2702,7 +2764,7 @@ main(int argc, char *argv[])
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
-	runAutostart();
+	//runAutostart();
 	run();
 	cleanup();
 	XCloseDisplay(dpy);

@@ -36,8 +36,9 @@ static const char br_white[] = "#eceff4"; /* white   */
 
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { white, black, white},
-	[SchemeSel]  = { white, red, red},
+	[SchemeNorm] = { br_white, black, br_white},
+	[SchemeSel]  = { br_white, red, red},
+	[SchemeInactive]  = { yellow, black, yellow},
 };
 
 
@@ -76,13 +77,14 @@ static const Layout layouts[] = {
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
+#include "movestack.c"
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,             			XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,             			XK_d,      incnmaster,     {.i = -1 } },
+	{ MODKEY,             			XK_i,      more_hidden_window,     {.i = +1 } },
+	{ MODKEY,             			XK_d,      more_hidden_window,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
@@ -101,6 +103,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_n,      nametag,        {0} },
 	{ MODKEY|ControlMask,			XK_comma,  cyclelayout,    {.i = -1 } },
 	{ MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
+        { MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
+        { MODKEY|ShiftMask,             XK_k,      movestack,      {.i = -1 } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
