@@ -5,7 +5,7 @@ based on dwm-6.2
 added features:
 1. install script for pacman
 2. system tray
-3. autostart
+3. autostart (removed)
 4. use rofi instead of dmenu for launching programs
 5. newly opened window is inserted before the current one instead of being the master
 6. changed keyboard bindings
@@ -23,3 +23,4 @@ added features:
 17. gaps (default to 0)
 18. move stacks
 19. hide windows
+20. auto name tag
