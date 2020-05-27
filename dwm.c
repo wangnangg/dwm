@@ -539,6 +539,46 @@ attachabove(Client *c)
 	at->next = c;
 }
 
+Client* first_client(Monitor *m, int tag) {
+	for(Client* c = m->clients; c; c = c->next) {
+		if(c->tags & (1 << tag)) {
+			return c;
+		}
+	}
+	return NULL;
+}
+
+const char* get_client_display_name(Client* c) {
+	const char* class;
+	XClassHint ch = { NULL, NULL };
+	if(c == NULL) {
+		return "";
+	}
+
+
+	XGetClassHint(dpy, c->win, &ch);
+	class    = ch.res_class ? ch.res_class : broken;
+
+	for(int i = 0; i < LENGTH(window_name_map); i++) {
+		if(strcasestr(class, window_name_map[i].class_keyword)) {
+			return window_name_map[i].display_name;
+		}
+	}
+
+	return c->name;
+}
+
+void tag_display_name(Monitor* m, int tag, char* name) {
+	strncpy(name, m->pertag->tagnames[tag], MAX_TAGLEN);
+	if(strstr(name,":") == NULL) {
+		const char* client_name = get_client_display_name(first_client(m, tag));
+		if(strlen(client_name) > 0) {
+			strncat(name, " ", MAX_TAGLEN - strlen(name));
+			strncat(name, client_name, MAX_TAGLEN - strlen(name));
+		}
+	}
+}
+
 void
 buttonpress(XEvent *e)
 {
@@ -556,9 +596,12 @@ buttonpress(XEvent *e)
 		focus(NULL);
 	}
 	if (ev->window == selmon->barwin) {
+		char tag_name[MAX_TAGLEN+1];
 		i = x = 0;
-		do
-			x += TEXTW(selmon->pertag->tagnames[i]);
+		do {
+			tag_display_name(selmon, i, tag_name);
+			x += TEXTW(tag_name);
+		}
 		while (ev->x >= x && ++i < NUM_TAGS);
 		if (i < NUM_TAGS) {
 			click = ClkTagBar;
@@ -912,35 +955,6 @@ dirtomon(int dir)
 	return m;
 }
 
-const char* get_client_display_name(Client* c) {
-	const char* class;
-	XClassHint ch = { NULL, NULL };
-	if(c == NULL) {
-		return "";
-	}
-
-
-	XGetClassHint(dpy, c->win, &ch);
-	class    = ch.res_class ? ch.res_class : broken;
-
-	for(int i = 0; i < LENGTH(window_name_map); i++) {
-		if(strcasestr(class, window_name_map[i].class_keyword)) {
-			return window_name_map[i].display_name;
-		}
-	}
-
-	return c->name;
-}
-
-Client* first_client(Monitor *m, int tag) {
-	for(Client* c = m->clients; c; c = c->next) {
-		if(c->tags & (1 << tag)) {
-			return c;
-		}
-	}
-	return NULL;
-}
-
 void
 drawbar(Monitor *m)
 {
@@ -972,14 +986,7 @@ drawbar(Monitor *m)
 	x = 0;
 	for (i = 0; i < NUM_TAGS; i++) {
 		char name[MAX_TAGLEN + 1];
-		strncpy(name, m->pertag->tagnames[i], MAX_TAGLEN);
-		if(strstr(name,":") == NULL) {
-			const char* client_name = get_client_display_name(first_client(m, i));
-			if(strlen(client_name) > 0) {
-				strncat(name, " ", MAX_TAGLEN - strlen(name));
-				strncat(name, client_name, MAX_TAGLEN - strlen(name));
-			}
-		}
+		tag_display_name(m, i, name);
 		w = TEXTW(name);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, name, urg & 1 << i);
