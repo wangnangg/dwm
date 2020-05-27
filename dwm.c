@@ -231,7 +231,6 @@ static void resizemouse(const Arg *arg);
 static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
 static void run(void);
-static void runAutostart(void);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -374,11 +373,17 @@ static Bool ISVISIBLE(Client* C) {
 
 static void more_hidden_window(const Arg *arg)
 {
+	int client_count = count_clients_with_active_tag(selmon);
 	int hidden_count = selmon->pertag->num_hidden_windows[selmon->pertag->curtag];
 	hidden_count += arg->i;
 	if(hidden_count < 0) {
 		hidden_count = 0;
 	}
+
+	if(hidden_count > client_count) {
+		hidden_count = client_count;
+	}
+
 	selmon->pertag->num_hidden_windows[selmon->pertag->curtag] = hidden_count;
 	arrange(selmon);
 }
@@ -1777,12 +1782,6 @@ run(void)
 	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
-}
-
-void
-runAutostart(void) {
-	system("cd ~/.dwm; ./autostart_blocking.sh");
-	system("cd ~/.dwm; ./autostart.sh &");
 }
 
 void
