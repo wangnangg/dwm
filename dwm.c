@@ -320,7 +320,7 @@ struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
 	int nmasters[NUM_TAGS + 1]; /* number of windows in master area */
 	float mfacts[NUM_TAGS + 1]; /* mfacts per tag */
-	char tagnames[NUM_TAGS][MAX_TAGLEN];
+	char tagnames[NUM_TAGS][MAX_TAGLEN + 1];
 	unsigned int sellts[NUM_TAGS + 1]; /* selected layouts */
 	const Layout *ltidxs[NUM_TAGS + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[NUM_TAGS + 1]; /* display bar for the current tag */
@@ -932,6 +932,15 @@ const char* get_client_display_name(Client* c) {
 	return c->name;
 }
 
+Client* first_client(Monitor *m, int tag) {
+	for(Client* c = m->clients; c; c = c->next) {
+		if(c->tags & (1 << tag)) {
+			return c;
+		}
+	}
+	return NULL;
+}
+
 void
 drawbar(Monitor *m)
 {
@@ -962,9 +971,18 @@ drawbar(Monitor *m)
 	}
 	x = 0;
 	for (i = 0; i < NUM_TAGS; i++) {
-		w = TEXTW(m->pertag->tagnames[i]);
+		char name[MAX_TAGLEN + 1];
+		strncpy(name, m->pertag->tagnames[i], MAX_TAGLEN);
+		if(strstr(name,":") == NULL) {
+			const char* client_name = get_client_display_name(first_client(m, i));
+			if(strlen(client_name) > 0) {
+				strncat(name, " ", MAX_TAGLEN - strlen(name));
+				strncat(name, client_name, MAX_TAGLEN - strlen(name));
+			}
+		}
+		w = TEXTW(name);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, m->pertag->tagnames[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, name, urg & 1 << i);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
