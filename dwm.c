@@ -1003,19 +1003,25 @@ drawbar(Monitor *m)
 	if ((w = m->ww - sw - stw - x) > bh) {
 		if (n > 0) {
 			tw = TEXTW(get_client_display_name(m->sel)) + lrpad;
-			mw = (tw >= w || n == 1) ? 0 : (w - tw) / (n - 1);
-			i = 0;
-			for (c = m->clients; c; c = c->next) {
-				if (!TAG_ACTIVE(c) || c == m->sel)
-					continue;
-				tw = TEXTW(get_client_display_name(c));
-				if(tw < mw)
-					ew += (mw - tw);
-				else
-					i++;
+			if (n > 1) {
+				mw = (tw >= w) ? 0 : (w - tw) / (n - 1);
+				i = 0;
+				for (c = m->clients; c; c = c->next) {
+					if (!TAG_ACTIVE(c) || c == m->sel)
+						continue;
+					tw = TEXTW(get_client_display_name(c));
+					if(tw < mw)
+						ew += (mw - tw);
+					else
+						i++;
+				}
+				if (i > 0)
+					mw += ew / i;
+
+			} else {
+				mw = w;
 			}
-			if (i > 0)
-				mw += ew / i;
+
 			Bool first_hidden_found = False;
 			int norm_theme = SchemeNorm;
 			int sel_theme = SchemeSel;
@@ -1025,7 +1031,6 @@ drawbar(Monitor *m)
 				if(!first_hidden_found && !ISVISIBLE(c)) {
 					norm_theme = SchemeInactive;
 					sel_theme = SchemeInactive;
-					drw_setscheme(drw, scheme[norm_theme]);
 					first_hidden_found = True;
 				}
 				tw = MIN(m->sel == c ? w : mw, TEXTW(get_client_display_name(c)));
