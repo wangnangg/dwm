@@ -571,10 +571,15 @@ const char* get_client_display_name(Client* c) {
 void tag_display_name(Monitor* m, int tag, char* name) {
 	strncpy(name, m->pertag->tagnames[tag], MAX_TAGLEN);
 	if(strstr(name,":") == NULL) {
-		const char* client_name = get_client_display_name(first_client(m, tag));
-		if(strlen(client_name) > 0) {
-			strncat(name, " ", MAX_TAGLEN - strlen(name));
-			strncat(name, client_name, MAX_TAGLEN - strlen(name));
+		for(Client* c = m->clients; c; c = c->next) {
+			if(c->tags & (1 << tag)) {
+				const char* client_name = get_client_display_name(c);
+				if(strlen(client_name) > 0) {
+					strncat(name, " ", MAX_TAGLEN - strlen(name));
+					strncat(name, client_name, MAX_TAGLEN - strlen(name));
+					if(strlen(name) == MAX_TAGLEN) break;
+				}
+			}
 		}
 	}
 }
