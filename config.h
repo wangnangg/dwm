@@ -133,7 +133,7 @@ static Button buttons[] = {
 };
 
 static WindowNameMap window_name_map[] = {
-	{"code - insiders", ""},
+	{"code", ""},
 	{"st-256color", ""},
 	{"google-chrome", ""},
 	{"slack", "聆"},
